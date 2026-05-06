@@ -88,8 +88,6 @@ class Level:
         self.orpheus_goal = Goal()
         self.eurydice_goal = Goal()
 
-    
-    
     def __init__(
         self,
         lyre: Lyre,
