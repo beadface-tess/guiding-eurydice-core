@@ -123,6 +123,7 @@ class Level:
       self,
       lyre: t.Optional[Lyre]=None,
       orpheus_goal: t.Optional[Goal]=None,
+      debug: t.Optional[bool]=False,
     ):
         self._assign_id()
         self.eurydice_lives = -1
@@ -137,6 +138,8 @@ class Level:
         else:
           self.orpheus_goal = Goal()
 
+        self.debug = debug
+
         self.eurydice_goal = Goal()
         self.state = self.LevelState.READY
       
@@ -144,8 +147,11 @@ class Level:
         res = str(self.lyre)
         res += "\n"
         res += "Orpheus  needs:  " + str(self.orpheus_goal)
-        res += "\n"
-        res += "Eurydice needs: " + str(self.eurydice_goal) + f" ({self.eurydice_lives} lives remaining)"
+
+        if (self.debug):
+            res += "\n"
+            res += "Eurydice needs: " + str(self.eurydice_goal) + f" ({self.eurydice_lives} lives remaining)"
+        
         return res
     
     def get_state(self) -> LevelState:
@@ -153,6 +159,10 @@ class Level:
     
     def play_note(self, note: str):
         self.lyre.play_note(note)
+
+    def reset(self):
+        self.state = Level.LevelState.READY
+        self.eurydice_goal = Goal()
 
     def set_eurydice_goal(self) -> int:
         if self.state != self.LevelState.ORPHEUS_SUCCESS:
