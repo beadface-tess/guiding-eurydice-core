@@ -177,8 +177,6 @@ class Level:
         eurydice_goal_sum_len = randint(int(len(eligible_notes) / 2), len(eligible_notes))
 
         possible_totals = list(self.lyre.possible_sums(flattened_notes, eurydice_goal_sum_len))
-        print("Goal length: ", eurydice_goal_sum_len)
-        print("POSSIBLE TOTALS: ", possible_totals)
       
         self.eurydice_lives = len(possible_totals)
         self.eurydice_goal.val = possible_totals[randint(0, len(possible_totals) - 1)]
