@@ -27,9 +27,11 @@ class Lyre:
 
     def __init__(
       self,
-      notes: t.Optional[t.List[Note]]={},
+      notes: t.Optional[t.List[Note]]=[],
+      debug: t.Optional[bool]=False,
     ):
         self.notes = notes
+        self.debug = debug
 
     def __str__(self) -> str:
         res = ""
@@ -38,6 +40,20 @@ class Lyre:
             res += str(note) + "\n"
         
         return res
+    
+    def copy(self) -> Lyre:
+        l = Lyre()
+        l.debug = self.debug
+
+        for note in self.notes:
+            n = Note()
+            n.name = note.name
+            n.val = note.val
+            n.count = note.count
+
+            l.notes.append(n)
+        
+        return l
     
     def get_note(
         self,
@@ -63,8 +79,8 @@ class Lyre:
 
     def n_sum(self, target, n=None) -> t.List[t.Tuple]:
         notes = []
-        for note, count in self.notes.items():
-            notes.extend([note] * count)
+        for note in self.notes:
+            notes.extend([note] * note.count)
 
         results = []
 
@@ -73,9 +89,15 @@ class Lyre:
         else:
             sizes = [n]
 
+        if self.debug:
+            print("Eurydice size: ", [str(n) for n in sizes])
+
         for size in sizes:
             for combo in combinations(notes, size):
                 if sum([note.val for note in combo]) == target:
+                    if self.debug:
+                        print("For size ", str(size), " found combination ", [[str(note) for note in tup] for tup in combinations(notes, size)], " that works.")
+
                     results.append(combo)
 
         return results
@@ -139,6 +161,7 @@ class Level:
           self.orpheus_goal = Goal()
 
         self.debug = debug
+        self.lyre.debug = debug
 
         self.eurydice_goal = Goal()
         self.state = self.LevelState.READY
@@ -153,7 +176,7 @@ class Level:
             res += "Eurydice needs: " + str(self.eurydice_goal) + f" ({self.eurydice_lives} lives remaining)"
         
         return res
-    
+
     def get_state(self) -> LevelState:
        return self.state       
     
@@ -192,25 +215,41 @@ class Level:
         else:
             self.state = self.LevelState.ORPHEUS_FATAL
 
+    def check_eurydice(
+        self,
+        eurydice_sum_length: int,
+    ) -> bool:
+        if self.debug:
+            print("Checking Eurydice...")
+        if self.eurydice_lives == 0:
+            if self.debug:
+                print("Eurydice is out of lives.")
+            self.state = self.LevelState.EURYDICE_FATAL
+            return False
+        
+        solutions = self.lyre.n_sum(self.eurydice_goal.val, eurydice_sum_length)
+
+        if self.debug:
+            print(f"Found {str(len(solutions))} solutions for Eurydice: {[[str(note) for note in soln] for soln in solutions]}")
+        if len(solutions) == 0:
+            print("No solutions possible for Eurydice. Thwarting...")
+            self.state = self.LevelState.EURYDICE_THWARTED
+            return False
+
+        return True
+
     def try_eurydice(
         self,
+        num_notes: int,
         total: int,
         eurydice_sum_length: int,
     ):
-        if self.eurydice_lives == 0:
-            self.state = self.LevelState.EURYDICE_FATAL
-            return
-        
-        solutions = self.lyre.n_sum(self.eurydice_goal.val, eurydice_sum_length)
-        if len(solutions) == 0:
-            self.state = self.LevelState.EURYDICE_THWARTED
+        if (num_notes == eurydice_sum_length) and (total == self.eurydice_goal.val):
+            self.state = self.LevelState.SUCCESS
         else:
-            if total == self.eurydice_goal.val:
-                self.state = self.LevelState.SUCCESS
-            else:
-                self.state = self.LevelState.EURYDICE_FAIL
-                self.eurydice_lives -= 1
-            
+            self.state = self.LevelState.EURYDICE_FAIL
+            self.eurydice_lives -= 1
+        
 
 
         
