@@ -7,21 +7,16 @@ from random import randint
 class Note:
     def __init__(
       self,
-      val: t.Optional[int],
-      name: t.Optional[str],
+      val: t.Optional[int]=-1,
+      name: t.Optional[str]="Z",
+      count: t.Optional[int]=1,
     ):
-      if val is None:
-        self.val = -1
-      else:
-        self.val = val
-
-      if name is None:
-        self.name = "X"
-      else:
-        self.name = name
+      self.val = val
+      self.name = name
+      self.count = count
         
     def __str__(self) -> str:
-        return f"{self.name} (" + "{.02d}".format(self.val) + ")"
+        return "{:<2}".format(self.name) + " (" + "{:02d}".format(self.val) + ") - " + "{:02d}".format(self.count) + " remaining"
 
 class Lyre:
     class NoSuchNoteException(Exception):
@@ -32,37 +27,36 @@ class Lyre:
 
     def __init__(
       self,
-      notes: t.Optional[t.Union[t.List[str], t.Dict[Note, int]]],
+      notes: t.Optional[t.List[Note]]={},
     ):
-        self.notes = {}
-        if notes is not None:
-          if isinstance(notes, list):
-            for note in notes:
-              self.notes[note] = 1
-          elif isinstance(notes, dict):
-            self.notes = notes
-          else:
-            raise Exception
+        self.notes = notes
 
     def __str__(self) -> str:
         res = ""
 
-        for note, count in self.notes.items():
-            res += f"{note} - " + "{.02d}".format(count) + " remaining" + "\n"
+        for note in self.notes:
+            res += str(note) + "\n"
         
         return res
     
+    def get_note(
+        self,
+        name: str,
+    ) -> Note:
+        return next((note for note in self.notes if note.name == name), None)
+    
     def play_note(
         self,
-        note: Note,
+        name: str,
     ):
-        if note not in self.notes:
+        n = self.get_note(name)
+        if n is None:
             raise self.NoSuchNoteException
         
-        if self.notes[note] == 0:
+        if n.count == 0:
             raise self.NoteDepletedException
 
-        self.notes[note] -= 1
+        n.count -= 1
 
     def n_sum(self, target, n=None) -> t.List[t.Tuple]:
         notes = []
@@ -100,7 +94,7 @@ class Goal:
 
     def __init__(
       self,
-      val: t.Optional[int],
+      val: t.Optional[int]=None,
     ):
         if val is None:
           self.val = -1
@@ -128,8 +122,8 @@ class Level:
 
     def __init__(
       self,
-      lyre: t.Optional[Lyre],
-      orpheus_goal: t.Optional[Goal],
+      lyre: t.Optional[Lyre]=None,
+      orpheus_goal: t.Optional[Goal]=None,
     ):
         self._assign_id()
         self.eurydice_lives = -1
@@ -148,15 +142,15 @@ class Level:
         self.state = self.LevelState.READY
       
     def __str__(self) -> str:
-        res = ""
-        res += f"LEVEL {str(self.id)}: {str(self.state)}"
+        res = str(self.lyre)
         res += "\n"
-        res += str(self.lyre)
-        res += "\n"
-        res += "Orpheus needs:  " + str(self.orpheus_goal)
+        res += "Orpheus  needs:  " + str(self.orpheus_goal)
         res += "\n"
         res += "Eurydice needs: " + str(self.eurydice_goal) + f" ({self.eurydice_lives} lives remaining)"
         return res
+    
+    def get_state(self) -> LevelState:
+       return self.state       
     
     def play_note(self, note: str):
         self.lyre.play_note(note)
@@ -194,11 +188,7 @@ class Level:
         self,
         notes: t.List[Note]
     ):
-        total = 0
-
-        for note in notes:
-            self.lyre.play_note(note)
-            total += note.val
+        total = sum([note.val for note in notes])
 
         if total == self.orpheus_goal.val:
             self.state = self.LevelState.ORPHEUS_SUCCESS
