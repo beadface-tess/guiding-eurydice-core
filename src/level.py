@@ -77,14 +77,10 @@ class Lyre:
 
         return results
 
-    def possible_sums(self, n: int) -> t.Set[int]:
-        notes = []
-        for note, count in self.notes.items():
-            notes.extend([note] * count)
-
+    def possible_sums(self, flattened_notes: t.List[int], n: int) -> t.Set[int]:
         totals = set()
-        for combo in combinations(notes, n):
-            totals.add(sum([note.val for note in combo]))
+        for combo in combinations(flattened_notes, n):
+            totals.add(sum([val for val in combo]))
 
         return totals
 
@@ -105,7 +101,7 @@ class Goal:
         return str(self.val)
     
 class Level:
-    global_id = 0
+    global_id = 1
 
     class LevelState(Enum):
         READY = 0
@@ -155,41 +151,31 @@ class Level:
     def play_note(self, note: str):
         self.lyre.play_note(note)
 
-    def set_eurydice_goal(self):
+    def set_eurydice_goal(self) -> int:
         if self.state != self.LevelState.ORPHEUS_SUCCESS:
             raise Exception
 
-        eligible_notes = [note for note in self.lyre.notes.keys() if self.lyre.notes[note] > 0]
-        eurydice_goal_sum_len = len(eligible_notes) / 2
-        curr_notes = 0
-        note_counts = {}
-
-        while (curr_notes < eurydice_goal_sum_len):
-            idx = randint(0, len(eligible_notes) - 1)
-            if eligible_notes[idx] in note_counts:
-                if note_counts[eligible_notes[idx]] == self.lyre.notes[eligible_notes[idx]]:
-                    continue
-                note_counts[eligible_notes[idx]] += 1
-            else:
-                note_counts[eligible_notes[idx]] = 1
-            curr_notes += 1
+        eligible_notes = [note for note in self.lyre.notes if note.count > 0]
         
-        flattened_notes = []
-        for note, count in note_counts.items():
-          flattened_notes.extend([note] * count)
+        flattened_notes : t.List[int] = []
+        for note in eligible_notes:
+          flattened_notes.extend([note.val] * note.count)
 
-        eurydice_note_count = len(flattened_notes)
-        possible_totals = self.lyre.possible_sums(eurydice_note_count)
+        eurydice_goal_sum_len = randint(int(len(eligible_notes) / 2), len(eligible_notes))
+
+        possible_totals = list(self.lyre.possible_sums(flattened_notes, eurydice_goal_sum_len))
+        print("Goal length: ", eurydice_goal_sum_len)
+        print("POSSIBLE TOTALS: ", possible_totals)
       
         self.eurydice_lives = len(possible_totals)
-        self.eurydice_goal.val = sum([note.val for note in flattened_notes])
+        self.eurydice_goal.val = possible_totals[randint(0, len(possible_totals) - 1)]
+
+        return eurydice_goal_sum_len
 
     def try_orpheus(
         self,
-        notes: t.List[Note]
+        total: int,
     ):
-        total = sum([note.val for note in notes])
-
         if total == self.orpheus_goal.val:
             self.state = self.LevelState.ORPHEUS_SUCCESS
         else:
@@ -197,18 +183,18 @@ class Level:
 
     def try_eurydice(
         self,
-        notes: t.List[Note],
-        n: int,
+        total: int,
+        eurydice_sum_length: int,
     ):
         if self.eurydice_lives == 0:
             self.state = self.LevelState.EURYDICE_FATAL
             return
         
-        solutions = self.lyre.n_sum(self.eurydice_goal.val, n)
+        solutions = self.lyre.n_sum(self.eurydice_goal.val, eurydice_sum_length)
         if len(solutions) == 0:
             self.state = self.LevelState.EURYDICE_THWARTED
         else:
-            if sum([note.val for note in notes]) == self.eurydice_goal.val:
+            if total == self.eurydice_goal.val:
                 self.state = self.LevelState.SUCCESS
             else:
                 self.state = self.LevelState.EURYDICE_FAIL
