@@ -43,20 +43,23 @@ class Lyre:
         self,
         name: str,
     ) -> Note:
-        return next((note for note in self.notes if note.name == name), None)
+        note = next((note for note in self.notes if note.name == name), None)
+        
+        return note
     
     def play_note(
         self,
         name: str,
     ):
-        n = self.get_note(name)
-        if n is None:
+        note = self.get_note(name)
+
+        if note is None:
             raise self.NoSuchNoteException
         
-        if n.count == 0:
+        if note.count < 1:
             raise self.NoteDepletedException
-
-        n.count -= 1
+        
+        note.count -= 1
 
     def n_sum(self, target, n=None) -> t.List[t.Tuple]:
         notes = []
