@@ -1,8 +1,8 @@
+import random
 import typing as t
 
 from enum import Enum
 from itertools import combinations
-from random import randint
 
 class Note:
     def __init__(
@@ -27,10 +27,13 @@ class Lyre:
 
     def __init__(
       self,
-      notes: t.Optional[t.List[Note]]=[],
+      notes: t.Optional[t.List[Note]]=None,
       debug: t.Optional[bool]=False,
     ):
-        self.notes = notes
+        if notes is not None:
+            self.notes = notes
+        else:
+            self.notes = []
         self.debug = debug
 
     def __str__(self) -> str:
@@ -146,6 +149,7 @@ class Level:
       lyre: t.Optional[Lyre]=None,
       orpheus_goal: t.Optional[Goal]=None,
       debug: t.Optional[bool]=False,
+      given_seed: t.Optional[int]=None,
     ):
         self._assign_id()
         self.eurydice_lives = -1
@@ -155,21 +159,30 @@ class Level:
         else:
           self.lyre = Lyre()
 
+        self.backup_lyre = None
+
         if orpheus_goal is not None:
           self.orpheus_goal = orpheus_goal
         else:
           self.orpheus_goal = Goal()
+
+        if given_seed is not None:
+            self.seed = given_seed
+        else:
+            self.seed = random.randint(0, 1000)
 
         self.debug = debug
         self.lyre.debug = debug
 
         self.eurydice_goal = Goal()
         self.state = self.LevelState.READY
+        self.rng = random.Random(self.seed)
+        self.backup_rng_state = None
       
     def __str__(self) -> str:
         res = str(self.lyre)
         res += "\n"
-        res += "Orpheus  needs:  " + str(self.orpheus_goal)
+        res += "Orpheus needs:  " + str(self.orpheus_goal)
 
         if (self.debug):
             res += "\n"
@@ -183,11 +196,37 @@ class Level:
     def play_note(self, note: str):
         self.lyre.play_note(note)
 
-    def reset(self):
+    def back_up_lyre(self):
+        self.backup_lyre = self.lyre.copy()    
+
+    def back_up_rng(self):
+        self.backup_rng_state = self.rng.getstate()
+
+    def thwart_rollback(self):
+        self.lyre = self.backup_lyre
+        self.rng.setstate(self.backup_rng_state)
+
+    def thwart_eurydice(self):
+        self.eurydice_lives -= 1
+        self.thwart_rollback()
+        self.state = Level.LevelState.ORPHEUS_SUCCESS
+
+    def reset(
+        self,
+        given_seed: t.Optional[int] = None,
+    ):
         self.state = Level.LevelState.READY
         self.eurydice_goal = Goal()
 
+        if given_seed is not None:
+            self.seed = given_seed
+        else:
+            self.seed = random.randint(0, 1000)
+        
+        self.rng = random.Random(self.seed)
+
     def set_eurydice_goal(self) -> int:
+        print("HELLo")
         if self.state != self.LevelState.ORPHEUS_SUCCESS:
             raise Exception
 
@@ -197,12 +236,22 @@ class Level:
         for note in eligible_notes:
           flattened_notes.extend([note.val] * note.count)
 
-        eurydice_goal_sum_len = randint(int(len(eligible_notes) / 2), len(eligible_notes))
+        if self.debug:
+            print("LEVEL ID:", self.id)
+            print("SEED:", self.seed)
+            print("RNG STATE:", self.rng.getstate()[1][:5])
+            print("LYRE:", [(n.name, n.val, n.count) for n in self.lyre.notes])
+            print("ELIGIBLE LEN:", len(eligible_notes))
 
-        possible_totals = list(self.lyre.possible_sums(flattened_notes, eurydice_goal_sum_len))
+        eurydice_goal_sum_len = self.rng.randint(int(len(eligible_notes) / 2), len(eligible_notes))
+
+        if self.debug:
+            print("GOAL LEN: ", str(eurydice_goal_sum_len))
+
+        possible_totals = sorted(self.lyre.possible_sums(flattened_notes, eurydice_goal_sum_len))
       
         self.eurydice_lives = len(possible_totals)
-        self.eurydice_goal.val = possible_totals[randint(0, len(possible_totals) - 1)]
+        self.eurydice_goal.val = possible_totals[self.rng.randint(0, len(possible_totals) - 1)]
 
         return eurydice_goal_sum_len
 
@@ -217,10 +266,16 @@ class Level:
 
     def check_eurydice(
         self,
+        num_notes: int,
+        total: int,
         eurydice_sum_length: int,
     ) -> bool:
         if self.debug:
             print("Checking Eurydice...")
+        if (num_notes == eurydice_sum_length) and (total == self.eurydice_goal.val):
+            self.state = self.LevelState.SUCCESS
+            return True
+
         if self.eurydice_lives == 0:
             if self.debug:
                 print("Eurydice is out of lives.")
@@ -234,21 +289,13 @@ class Level:
         if len(solutions) == 0:
             print("No solutions possible for Eurydice. Thwarting...")
             self.state = self.LevelState.EURYDICE_THWARTED
+            self.thwart_eurydice()
             return False
-
-        return True
-
-    def try_eurydice(
-        self,
-        num_notes: int,
-        total: int,
-        eurydice_sum_length: int,
-    ):
-        if (num_notes == eurydice_sum_length) and (total == self.eurydice_goal.val):
-            self.state = self.LevelState.SUCCESS
+        
         else:
             self.state = self.LevelState.EURYDICE_FAIL
             self.eurydice_lives -= 1
+        return True
         
 
 
