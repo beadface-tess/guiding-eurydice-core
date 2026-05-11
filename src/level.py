@@ -72,11 +72,12 @@ class Lyre:
     ):
         note = self.get_note(name)
 
-        if note is None:
+        if (note is None):
             raise self.NoSuchNoteException
         
         if note.count < 1:
             raise self.NoteDepletedException
+        
         
         note.count -= 1
 
@@ -206,7 +207,7 @@ class Level:
         self.lyre = self.backup_lyre
         self.rng.setstate(self.backup_rng_state)
 
-    def thwart_eurydice(self):
+    def resolve_thwart(self):
         self.eurydice_lives -= 1
         self.thwart_rollback()
         self.state = Level.LevelState.ORPHEUS_SUCCESS
@@ -287,9 +288,9 @@ class Level:
         if self.debug:
             print(f"Found {str(len(solutions))} solutions for Eurydice: {[[str(note) for note in soln] for soln in solutions]}")
         if len(solutions) == 0:
-            print("No solutions possible for Eurydice. Thwarting...")
+            if self.debug:
+                print("No solutions possible for Eurydice. Thwarting...")
             self.state = self.LevelState.EURYDICE_THWARTED
-            self.thwart_eurydice()
             return False
         
         else:
