@@ -74,8 +74,6 @@ class Level:
       
     def __str__(self) -> str:
         res = str(self.lyre)
-        res += "\n"
-        res += "Orpheus needs:  " + str(self.orpheus_goal)
 
         if (self.debug):
             res += "\n"
