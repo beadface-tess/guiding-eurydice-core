@@ -162,9 +162,19 @@ class Level:
     ) -> bool:
         if self.debug:
             print("Checking Eurydice...")
-        if (num_notes == eurydice_sum_length) and (total == self.eurydice_goal.val):
-            self.state = self.LevelState.SUCCESS
-            return True
+        if (num_notes == eurydice_sum_length):
+            if (total == self.eurydice_goal.val):
+                if self.debug:
+                    print("Eurydice has met her goal. Returning True.")
+
+                self.state = self.LevelState.SUCCESS
+                return True
+        else:
+            if self.debug:
+                print("Sum length is incorrect.")
+                
+            self.state = self.LevelState.EURYDICE_FATAL
+            return False
 
         if self.eurydice_lives == 0:
             if self.debug:
@@ -185,6 +195,10 @@ class Level:
         else:
             self.state = self.LevelState.EURYDICE_FAIL
             self.eurydice_lives -= 1
+
+            if self.debug:
+                print(f"Eurydice has failed. {self.eurydice_lives} lives remaining.")
+
         return True
         
 

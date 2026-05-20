@@ -23,6 +23,9 @@ class Lyre:
     class NoteDepletedException(Exception):
         pass
 
+    class BrokenStringException(Exception):
+        pass
+
     def __init__(
       self,
       notes: t.Optional[t.List[Note]]=None,
@@ -33,6 +36,8 @@ class Lyre:
         else:
             self.notes = []
         self.debug = debug
+
+        self.broken_string_count = 0
 
     def __str__(self) -> str:
         res = ""
@@ -67,17 +72,28 @@ class Lyre:
     def play_note(
         self,
         name: str,
-    ):
+    ) -> Note:   
+        def _check_for_broken_string():
+            if self.debug:
+                print(f"Broken string count: {str(self.broken_string_count)}")
+
+            if self.broken_string_count > 1:
+                raise self.BrokenStringException()
+
         note = self.get_note(name)
 
         if (note is None):
-            raise self.NoSuchNoteException
+            self.broken_string_count += 1
+            _check_for_broken_string()
+            raise self.NoSuchNoteException()
         
         if note.count < 1:
-            raise self.NoteDepletedException
-        
-        
+            self.broken_string_count += 1
+            _check_for_broken_string()
+            raise self.NoteDepletedException()
+
         note.count -= 1
+        return note
 
     def n_sum(self, target, n=None) -> t.List[t.Tuple]:
         notes = []
