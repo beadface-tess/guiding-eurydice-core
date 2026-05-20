@@ -1,6 +1,9 @@
+import random
 import typing as t
 
 from itertools import combinations
+
+from .difficulty import Difficulty
 
 class Note:
     def __init__(
@@ -10,11 +13,18 @@ class Note:
       count: t.Optional[int]=1,
     ):
       self.val = val
+      self.val_hidden = False
       self.name = name
+      self.name_hidden = False
       self.count = count
+      self.count_hidden = False
+      self.stress_count = 0
         
     def __str__(self) -> str:
-        return "{:<2}".format(self.name) + " (" + "{:02d}".format(self.val) + ") - " + "{:02d}".format(self.count) + " remaining"
+        val_str = "??" if self.val_hidden else "{:02d}".format(self.val)
+        name_str = "??" if self.name_hidden else "{:<2}".format(self.name)
+        count_str = "??" if self.count_hidden else "{:02d}".format(self.count)
+        return name_str + " (" + val_str + ") - " + count_str + " remaining"
 
 class Lyre:
     class NoSuchNoteException(Exception):
@@ -30,26 +40,94 @@ class Lyre:
       self,
       notes: t.Optional[t.List[Note]]=None,
       debug: t.Optional[bool]=False,
+      difficulty: t.Optional[Difficulty]=None,
+      rng: t.Optional[random.Random]=None,
     ):
-        if notes is not None:
-            self.notes = notes
-        else:
-            self.notes = []
+        self.notes = notes or []
         self.debug = debug
+        self.difficulty = difficulty or Difficulty()
+        self.rng = rng or random.Random()
 
-        self.broken_string_count = 0
+        self.no_such_note_count = 0
+        self.notes_played_count = 0
+
+        self.next_hidden_note_name_it = self.rng.randint(
+            self.difficulty.lyre_difficulty.note_names_difficulty.min_plays_per_it,
+            self.difficulty.lyre_difficulty.note_names_difficulty.max_plays_per_it
+        )
+        self.next_hidden_remaining_it = self.rng.randint(
+            self.difficulty.lyre_difficulty.remaining_notes_difficulty.min_plays_per_it,
+            self.difficulty.lyre_difficulty.remaining_notes_difficulty.max_plays_per_it
+        )
+        self.next_hidden_value_it = self.rng.randint(
+            self.difficulty.lyre_difficulty.note_values_difficulty.min_plays_per_it,
+            self.difficulty.lyre_difficulty.note_values_difficulty.max_plays_per_it
+        )
+
+    def reset_hidden_note_names(self):
+        self.next_hidden_note_name_it = self.rng.randint(
+            self.difficulty.lyre_difficulty.note_names_difficulty.min_plays_per_it + self.notes_played_count,
+            self.difficulty.lyre_difficulty.note_names_difficulty.max_plays_per_it + self.notes_played_count
+        )
+    
+    def reset_hidden_remaining_notes(self):
+        self.next_hidden_remaining_it = self.rng.randint(
+            self.difficulty.lyre_difficulty.remaining_notes_difficulty.min_plays_per_it + self.notes_played_count,
+            self.difficulty.lyre_difficulty.remaining_notes_difficulty.max_plays_per_it + self.notes_played_count
+        )        
+
+    def reset_hidden_note_values(self):
+        self.next_hidden_value_it = self.rng.randint(
+            self.difficulty.lyre_difficulty.remaining_notes_difficulty.min_plays_per_it + self.notes_played_count,
+            self.difficulty.lyre_difficulty.note_values_difficulty.max_plays_per_it + self.notes_played_count
+        )
+
+    def hide_notes(self):
+        def _get_indices_to_hide(difficulty: Difficulty.LyreDifficulty.NotesDifficulty) -> t.List[int]:
+            num_note_names_to_hide = self.rng.randint(
+                difficulty.min_hidden_per_it,
+                difficulty.max_hidden_per_it
+            )
+            indices_to_choose_from = [i for i in range(0, len(self.notes))]
+            indices_to_hide = []
+
+            for _ in range(0, num_note_names_to_hide):
+                chosen = self.rng.choice(indices_to_choose_from)
+                indices_to_hide.append(chosen)
+                indices_to_choose_from.pop(indices_to_choose_from.index(chosen))
+            
+            return indices_to_hide
+        
+        hide_note_names = self.notes_played_count == self.next_hidden_note_name_it
+        hide_note_values = self.notes_played_count == self.next_hidden_value_it
+        hide_remaining_notes = self.notes_played_count == self.next_hidden_remaining_it
+            
+        note_names_idxs = _get_indices_to_hide(self.difficulty.lyre_difficulty.note_names_difficulty)
+        note_values_idxs = _get_indices_to_hide(self.difficulty.lyre_difficulty.note_values_difficulty)
+        notes_remaining_idxs = _get_indices_to_hide(self.difficulty.lyre_difficulty.remaining_notes_difficulty)
+
+        for idx, note in enumerate(self.notes):
+            if hide_note_names and (idx in note_names_idxs):
+                note.name_hidden = True
+        
+            if hide_note_values and (idx in note_values_idxs):
+                note.val_hidden = True
+            
+            if hide_remaining_notes and (idx in notes_remaining_idxs):
+                note.count_hidden = True
 
     def __str__(self) -> str:
         res = ""
-
         for note in self.notes:
             res += str(note) + "\n"
-        
-        return res
+        return res  
     
     def copy(self) -> Lyre:
         l = Lyre()
         l.debug = self.debug
+        l.difficulty = self.difficulty
+        l.no_such_note_count = self.no_such_note_count
+        l.notes_played_count = self.notes_played_count
 
         for note in self.notes:
             n = Note()
@@ -73,26 +151,26 @@ class Lyre:
         self,
         name: str,
     ) -> Note:   
-        def _check_for_broken_string():
+        def _check_for_broken_string(note: t.Optional[Note]=None):
             if self.debug:
-                print(f"Broken string count: {str(self.broken_string_count)}")
+                print(f"Broken string count: {str(self.no_such_note_count)}")
 
-            if self.broken_string_count > 1:
-                raise self.BrokenStringException()
+            if note:
+                if note.stress_count > self.difficulty.lyre_difficulty.broken_strings_difficulty.max_notes_depleted:
+                    raise self.BrokenStringException()
+                note.stress_count += 1
+                raise self.NoteDepletedException()
+            else:
+                if self.no_such_note_count > self.difficulty.lyre_difficulty.broken_strings_difficulty.max_no_such_note:
+                    raise self.BrokenStringException()
+                self.no_such_note_count += 1
+                raise self.NoSuchNoteException()
 
+        self.hide_notes()
         note = self.get_note(name)
-
-        if (note is None):
-            self.broken_string_count += 1
-            _check_for_broken_string()
-            raise self.NoSuchNoteException()
-        
-        if note.count < 1:
-            self.broken_string_count += 1
-            _check_for_broken_string()
-            raise self.NoteDepletedException()
-
+        _check_for_broken_string(note)
         note.count -= 1
+        self.notes_played_count += 1
         return note
 
     def n_sum(self, target, n=None) -> t.List[t.Tuple]:

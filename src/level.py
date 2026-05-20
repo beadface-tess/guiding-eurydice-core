@@ -3,7 +3,8 @@ import typing as t
 
 from enum import Enum
 
-from .lyre import Lyre, Note
+from .difficulty import Difficulty
+from .lyre import Lyre
 
 class Goal:
     class NoGoalDefinedException(Exception):
@@ -40,6 +41,7 @@ class Level:
     def __init__(
       self,
       lyre: t.Optional[Lyre]=None,
+      difficulty: t.Optional[Difficulty]=None,
       orpheus_goal: t.Optional[Goal]=None,
       debug: t.Optional[bool]=False,
       given_seed: t.Optional[int]=None,
@@ -47,10 +49,9 @@ class Level:
         self._assign_id()
         self.eurydice_lives = -1
 
-        if lyre is not None:
-          self.lyre = lyre
-        else:
-          self.lyre = Lyre()
+        self.difficulty = difficulty or Difficulty()
+
+        self.lyre = lyre or Lyre()
 
         self.backup_lyre = None
 
