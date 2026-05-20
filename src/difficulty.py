@@ -18,10 +18,18 @@ class Difficulty():
                 self.min_plays_per_it = min_plays_per_it
                 self.max_plays_per_it = max_plays_per_it
 
+            def __str__(self) -> str:
+                res = ""
+                res += f"min_hidden_per_it: {str(self.min_hidden_per_it)}\n"
+                res += f"max_hidden_per_it: {str(self.max_hidden_per_it)}\n"
+                res += f"min_plays_per_it: {str(self.min_plays_per_it)}\n"
+                res += f"max_plays_per_it: {str(self.max_plays_per_it)}\n"
+                return res
+
             @staticmethod
             def from_json(
                 data: t.Dict[str, t.Any]
-            ) -> NotesDifficulty:
+            ) -> Difficulty.LyreDifficulty.NotesDifficulty:
                 min_hidden_per_it = None
                 max_hidden_per_it = None
                 min_plays_per_it = None
@@ -39,7 +47,7 @@ class Difficulty():
                 if ("max_plays_per_it" in data.keys()) and (isinstance(data["max_plays_per_it"], int)):
                     max_plays_per_it = data["max_plays_per_it"]
 
-                return NotesDifficulty(
+                return Difficulty.LyreDifficulty.NotesDifficulty(
                     min_hidden_per_it=min_hidden_per_it,
                     max_hidden_per_it=max_hidden_per_it,
                     min_plays_per_it=min_plays_per_it,
@@ -55,10 +63,16 @@ class Difficulty():
                 self.max_notes_depleted = max_notes_depleted
                 self.max_no_such_note = max_no_such_note
 
+            def __str__(self) -> str:
+                res = ""
+                res += f"max_notes_depleted: {str(self.max_notes_depleted)}\n"
+                res += f"max_no_such_note: {str(self.max_no_such_note)}\n"
+                return res
+            
             @staticmethod
             def from_json(
                 data: t.Dict[str, t.Any]
-            ) -> BrokenStringDifficulty:
+            ) -> Difficulty.LyreDifficulty.BrokenStringDifficulty:
                 max_notes_depleted = None
                 max_no_such_note = None
 
@@ -68,7 +82,7 @@ class Difficulty():
                 if ("max_no_such_note" in data.keys()) and (isinstance(data["max_no_such_note"], int)):
                     max_no_such_note = data["max_no_such_note"]
                 
-                return BrokenStringDifficulty(
+                return Difficulty.LyreDifficulty.BrokenStringDifficulty(
                     max_notes_depleted=max_notes_depleted,
                     max_no_such_note=max_no_such_note,
                 )
@@ -85,32 +99,57 @@ class Difficulty():
             self.note_values_difficulty = note_values_difficulty or self.NotesDifficulty()
             self.broken_strings_difficulty = broken_strings_difficulty or self.BrokenStringDifficulty()
 
+        def __str__(self) -> str:
+            res = ""
+            rem_notes_diff = "remaining_notes_difficulty"
+            note_names_diff = "note_names_difficulty"
+            note_values_diff = "note_values_difficulty"
+            broken_strs_diff = "broken_strings_difficulty"
+
+            res += rem_notes_diff + "\n"
+            res += ("-" * len(rem_notes_diff)) + "\n"
+            res += str(self.remaining_notes_difficulty) + "\n"
+
+            res += note_names_diff + "\n"
+            res += ("-" * len(note_names_diff)) + "\n"
+            res += str(self.note_names_difficulty) + "\n"
+
+            res += note_values_diff + "\n"
+            res += ("-" * len(note_values_diff)) + "\n"
+            res += str(self.note_values_difficulty) + "\n"
+
+            res += broken_strs_diff + "\n"
+            res += ("-" * len(broken_strs_diff)) + "\n"
+            res += str(self.broken_strings_difficulty) + "\n"
+
+            return res
+
+        @staticmethod
         def from_json(
-            self,
             data: t.Dict[str, t.Any]
-        ) -> LyreDifficulty:
+        ) -> Difficulty.LyreDifficulty:
             remaining_notes_difficulty = None
             note_names_difficulty = None
             note_values_difficulty = None
-            broken_string_difficulty = None
+            broken_strings_difficulty = None
 
             if ("remaining_notes_hidden_config" in data.keys()) and (isinstance(data["remaining_notes_hidden_config"], dict)):
-                remaining_notes_difficulty = self.NotesDifficulty.from_json(data["remaining_notes_hidden_config"])
+                remaining_notes_difficulty = Difficulty.LyreDifficulty.NotesDifficulty.from_json(data["remaining_notes_hidden_config"])
             
             if ("note_names_hidden_config" in data.keys()) and (isinstance(data["note_names_hidden_config"], dict)):
-                note_names_difficulty = self.NotesDifficulty.from_json(data["note_names_hidden_config"])
+                note_names_difficulty = Difficulty.LyreDifficulty.NotesDifficulty.from_json(data["note_names_hidden_config"])
 
             if ("note_values_hidden_config" in data.keys()) and (isinstance(data["note_values_hidden_config"], dict)):
-                note_values_difficulty = self.NotesDifficulty.from_json(data["note_values_hidden_config"])
+                note_values_difficulty = Difficulty.LyreDifficulty.NotesDifficulty.from_json(data["note_values_hidden_config"])
             
             if ("broken_string_config" in data.keys()) and (isinstance(data["broken_string_config"], dict)):
-                broken_string_difficulty = data["broken_string_config"]
+                broken_strings_difficulty = Difficulty.LyreDifficulty.BrokenStringDifficulty.from_json(data["broken_string_config"])
             
-            return LyreDifficulty(
+            return Difficulty.LyreDifficulty(
                 remaining_notes_difficulty=remaining_notes_difficulty,
                 note_names_difficulty=note_names_difficulty,
                 note_values_difficulty=note_values_difficulty,
-                broken_string_difficulty=broken_string_difficulty,
+                broken_strings_difficulty=broken_strings_difficulty,
             )
 
     class SumDifficulty():
@@ -130,10 +169,20 @@ class Difficulty():
             self.min_plays_per_it = min_plays_per_it
             self.max_plays_per_it = max_plays_per_it
 
+        def __str__(self) -> str:
+            res = ""
+            res += f"min_turns_before_hiding_sum: {str(self.min_turns_before_hiding_sum)}\n"
+            res += f"max_turns_before_hiding_sum: {str(self.max_turns_before_hiding_sum)}\n"
+            res += f"min_hidden_addends_per_it: {str(self.min_hidden_addends_per_it)}\n"
+            res += f"max_hidden_addends_per_it: {str(self.max_hidden_addends_per_it)}\n"
+            res += f"min_plays_per_it: {str(self.min_plays_per_it)}\n"
+            res += f"max_plays_per_it: {str(self.max_plays_per_it)}\n"
+            return res
+        
         @staticmethod
         def from_json(
             data: t.Dict[str, t.Any]
-        ) -> SumDifficulty:
+        ) -> Difficulty.SumDifficulty:
             min_turns_before_hiding_sum = None
             max_turns_before_hiding_sum = None
             min_hidden_addends_per_it = None
@@ -159,7 +208,7 @@ class Difficulty():
             if ("max_plays_per_it" in data.keys()) and (isinstance(data["max_plays_per_it"], int)):
                 max_plays_per_it = data["max_plays_per_it"]
             
-            return SumDifficulty(
+            return Difficulty.SumDifficulty(
                 min_turns_before_hiding_sum=min_turns_before_hiding_sum,
                 max_turns_before_hiding_sum=max_turns_before_hiding_sum,
                 min_hidden_addends_per_it=min_hidden_addends_per_it,
@@ -178,8 +227,8 @@ class Difficulty():
         self,
         num: int,
         name: str,
-        lyre_difficulty: t.Optional[LyreDifficulty],
-        sum_difficulty: t.Optional[SumDifficulty],
+        lyre_difficulty: t.Optional[LyreDifficulty]=None,
+        sum_difficulty: t.Optional[SumDifficulty]=None,
         tutorial: t.Optional[bool] = False,
         orpheus_lives: t.Optional[int] = 1,
         eurydice_lives: t.Optional[int] = 0,
@@ -192,9 +241,30 @@ class Difficulty():
         self.lyre_difficulty = lyre_difficulty or self.LyreDifficulty()
         self.sum_difficulty = sum_difficulty or self.SumDifficulty()
 
-    
+    def __str__(self) -> str:
+        res = "\nDIFFICULTY\n"
+        res += ("=" * len(res)) + "\n"
+
+        lyre_diff_str = "lyre_difficulty"
+        sum_diff_str = "sum_diffculty"
+
+        res += f"num: {str(self.num)}\n"
+        res += f"name: {self.name}\n"
+        
+        res += lyre_diff_str + "\n"
+        res += ("=" * len(lyre_diff_str)) + "\n"
+        res += str(self.lyre_difficulty) + "\n"
+        res += ("=" * len(lyre_diff_str)) + "\n"
+
+        res += sum_diff_str + "\n"
+        res += ("=" * len(sum_diff_str)) + "\n"
+        res += str(self.sum_difficulty) + "\n"
+        res += ("=" * len(sum_diff_str)) + "\n"
+
+        return res
+
+    @staticmethod
     def from_json(
-        self,
         num: int,
         json_file_path: pathlib.Path
     ) -> Difficulty:
@@ -209,9 +279,12 @@ class Difficulty():
             data = json.load(f)
 
             if str(num) not in data.keys():
-                raise self.NoSuchLevelException()
+                raise Difficulty.NoSuchLevelException()
             
             level_cfg = data[str(num)]
+
+            if ("name" in level_cfg.keys()) and (isinstance(level_cfg["name"], str)):
+                name = level_cfg["name"]
 
             if ("tutorial" in level_cfg.keys()) and (isinstance(level_cfg["tutorial"], bool)):
                 tutorial = level_cfg["tutorial"]
@@ -222,11 +295,11 @@ class Difficulty():
             if ("eurydice_lives" in level_cfg.keys()) and (isinstance(level_cfg["eurydice_lives"], int)):
                 eurydice_lives = level_cfg["eurydice_lives"]
 
-            if ("lyre_difficulty_config" in level_cfg.keys()) and (isinstance(level_cfg["lyre_difficulty_cfg"], dict)):
-                lyre_difficulty = self.LyreDifficulty.from_json(level_cfg["lyre_difficulty_config"])
+            if ("lyre_difficulty_config" in level_cfg.keys()) and (isinstance(level_cfg["lyre_difficulty_config"], dict)):
+                lyre_difficulty = Difficulty.LyreDifficulty.from_json(level_cfg["lyre_difficulty_config"])
             
             if ("sum_hidden_config" in level_cfg.keys()) and (isinstance(level_cfg["sum_hidden_config"], dict)):
-                sum_difficulty = self.SumDifficulty.from_json(level_cfg["sum_hidden_config"])
+                sum_difficulty = Difficulty.SumDifficulty.from_json(level_cfg["sum_hidden_config"])
             
             return Difficulty(
                 num=num,

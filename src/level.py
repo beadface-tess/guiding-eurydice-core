@@ -53,6 +53,7 @@ class Level:
 
         self.lyre = lyre or Lyre()
 
+        self.original_lyre = self.lyre.copy()
         self.backup_lyre = None
 
         if orpheus_goal is not None:
@@ -71,6 +72,8 @@ class Level:
         self.eurydice_goal = Goal()
         self.state = self.LevelState.READY
         self.rng = random.Random(self.seed)
+        self.lyre.rng = self.rng
+        self.lyre.difficulty = self.difficulty
         self.backup_rng_state = None
       
     def __str__(self) -> str:
@@ -109,6 +112,7 @@ class Level:
     ):
         self.state = Level.LevelState.READY
         self.eurydice_goal = Goal()
+        self.lyre = self.original_lyre
 
         if given_seed is not None:
             self.seed = given_seed
