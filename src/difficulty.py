@@ -225,8 +225,8 @@ class Difficulty():
 
     def __init__(
         self,
-        num: int,
-        name: str,
+        num: int = None,
+        name: str = None,
         lyre_difficulty: t.Optional[LyreDifficulty]=None,
         sum_difficulty: t.Optional[SumDifficulty]=None,
         tutorial: t.Optional[bool] = False,

@@ -14,10 +14,8 @@ class Goal:
       self,
       val: t.Optional[int]=None,
     ):
-        if val is None:
-          self.val = -1
-        else:
-          self.val = val
+        self.val = val or -1
+        self.sum_len = -1
           
     def __str__(self) -> str:
         return str(self.val)
@@ -34,19 +32,21 @@ class Level:
         EURYDICE_FATAL = 5
         SUCCESS = 6
 
-    def _assign_id(self):
-        self.id = self.global_id
+    def _get_next_id(self) -> int:
         Level.global_id += 1
+        return Level.global_id - 1
 
     def __init__(
       self,
+      id: t.Optional[int] = None,
       lyre: t.Optional[Lyre]=None,
       difficulty: t.Optional[Difficulty]=None,
       orpheus_goal: t.Optional[Goal]=None,
       debug: t.Optional[bool]=False,
       given_seed: t.Optional[int]=None,
     ):
-        self._assign_id()
+        print("received id", id)
+        self.id = id or self._get_next_id()
         self.eurydice_lives = -1
 
         self.difficulty = difficulty or Difficulty()
@@ -121,7 +121,7 @@ class Level:
         
         self.rng = random.Random(self.seed)
 
-    def set_eurydice_goal(self) -> int:
+    def set_eurydice_goal(self):
         if self.state != self.LevelState.ORPHEUS_SUCCESS:
             raise Exception
 
@@ -147,8 +147,7 @@ class Level:
       
         self.eurydice_lives = len(possible_totals)
         self.eurydice_goal.val = possible_totals[self.rng.randint(0, len(possible_totals) - 1)]
-
-        return eurydice_goal_sum_len
+        self.eurydice_goal.sum_len = eurydice_goal_sum_len
 
     def try_orpheus(
         self,
@@ -163,11 +162,10 @@ class Level:
         self,
         num_notes: int,
         total: int,
-        eurydice_sum_length: int,
     ) -> bool:
         if self.debug:
             print("Checking Eurydice...")
-        if (num_notes == eurydice_sum_length):
+        if (num_notes == self.eurydice_goal.sum_len):
             if (total == self.eurydice_goal.val):
                 if self.debug:
                     print("Eurydice has met her goal. Returning True.")
@@ -187,7 +185,7 @@ class Level:
             self.state = self.LevelState.EURYDICE_FATAL
             return False
         
-        solutions = self.lyre.n_sum(self.eurydice_goal.val, eurydice_sum_length)
+        solutions = self.lyre.n_sum(self.eurydice_goal.val, self.eurydice_goal.sum_len)
 
         if self.debug:
             print(f"Found {str(len(solutions))} solutions for Eurydice: {[[str(note) for note in soln] for soln in solutions]}")
