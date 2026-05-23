@@ -275,7 +275,7 @@ class Difficulty():
         lyre_difficulty = None
         sum_difficulty = None
 
-        with open(json_file_path, "r") as f:
+        with open(json_file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
             if str(num) not in data.keys():
