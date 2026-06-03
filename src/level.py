@@ -98,7 +98,7 @@ class Level:
         self.backup_rng_state = self.rng.getstate()
 
     def thwart_rollback(self):
-        self.lyre = self.backup_lyre
+        self.lyre = self.backup_lyre.copy()
         self.rng.setstate(self.backup_rng_state)
 
     def resolve_thwart(self):

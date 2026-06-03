@@ -169,6 +169,12 @@ class Lyre:
             n.name = note.name
             n.val = note.val
             n.count = note.count
+            n.name_hidden = note.name_hidden
+            n.val_hidden = note.val_hidden
+            n.count_hidden = note.count_hidden
+
+            print(f"copying note: {note}")
+            _ = input("<enter>")
 
             l.notes.append(n)
         
