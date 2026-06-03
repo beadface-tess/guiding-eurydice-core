@@ -112,7 +112,7 @@ class Level:
     ):
         self.state = Level.LevelState.READY
         self.eurydice_goal = Goal()
-        self.lyre = self.original_lyre
+        self.lyre = self.original_lyre.copy()
 
         if given_seed is not None:
             self.seed = given_seed
