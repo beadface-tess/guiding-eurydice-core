@@ -7,14 +7,7 @@ from .difficulty import Difficulty
 
 from src.utils import TextUtility
 
-class Note:
-    GLOBAL_ID = 0
-    
-    @staticmethod
-    def _get_next_id() -> int:
-        Note.GLOBAL_ID += 1
-        return Note.GLOBAL_ID
-    
+class Note:    
     def __init__(
       self,
       id: t.Optional[int]=None,
@@ -24,8 +17,6 @@ class Note:
       text_utility: t.Optional[TextUtility] = TextUtility(),
     ):
         self.id = None
-        if not id:
-            self.id = Note._get_next_id()      
 
         self.val = val
         self.val_hidden = False
@@ -60,7 +51,7 @@ class Note:
                 raise ValueError("Note has multiple scratchpad states!")
             scratchpad_str = self.text_utility.green("✓")
 
-        return str(self.id) + " | " + scratchpad_str + " | " + name_str + " (" + val_str + ") - " + count_str + " remaining"
+        return "{:2d}".format(self.id) + " | " + scratchpad_str + " | " + name_str + " (" + val_str + ") - " + count_str + " remaining"
     
     def eliminate(self) -> None:
         if self.eliminated:
@@ -102,8 +93,12 @@ class Lyre:
       debug: t.Optional[bool]=False,
       difficulty: t.Optional[Difficulty]=None,
       rng: t.Optional[random.Random]=None,
-    ):
+    ):        
         self.notes = notes or []
+
+        for i, note in enumerate(self.notes):
+            note.id = i + 1       
+
         self.debug = debug
         self.difficulty = difficulty or Difficulty(2, "")
         self.rng = rng or random.Random()
@@ -224,7 +219,6 @@ class Lyre:
         l.no_such_note_count = self.no_such_note_count
         l.notes_played_count = self.notes_played_count
 
-        Note.GLOBAL_ID = 0
         for note in self.notes:
             n = Note()
             n.name = note.name
