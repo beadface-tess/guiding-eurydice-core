@@ -5,26 +5,86 @@ from itertools import combinations
 
 from .difficulty import Difficulty
 
+from src.utils import TextUtility
+
 class Note:
+    GLOBAL_ID = 0
+    
+    @staticmethod
+    def _get_next_id() -> int:
+        Note.GLOBAL_ID += 1
+        return Note.GLOBAL_ID
+    
     def __init__(
       self,
+      id: t.Optional[int]=None,
       val: t.Optional[int]=-1,
       name: t.Optional[str]="Z",
       count: t.Optional[int]=1,
+      text_utility: t.Optional[TextUtility] = TextUtility(),
     ):
-      self.val = val
-      self.val_hidden = False
-      self.name = name
-      self.name_hidden = False
-      self.count = count
-      self.count_hidden = False
-      self.stress_count = 0
+        self.id = None
+        if not id:
+            self.id = Note._get_next_id()      
+
+        self.val = val
+        self.val_hidden = False
+        self.name = name
+        self.name_hidden = False
+        self.count = count
+        self.count_hidden = False
+        self.stress_count = 0
+
+        self.text_utility = text_utility
+
+        self.eliminated = False
+        self.questioned = False
+        self.checked = False
         
     def __str__(self) -> str:
         val_str = "??" if self.val_hidden else "{:02d}".format(self.val)
         name_str = "??" if self.name_hidden else "{:<2}".format(self.name)
         count_str = "??" if self.count_hidden else "{:02d}".format(self.count)
-        return name_str + " (" + val_str + ") - " + count_str + " remaining"
+
+        scratchpad_str = " "
+        if self.eliminated:
+            if self.questioned or self.checked:
+                raise ValueError("Note has multiple scratchpad states!")
+            scratchpad_str = self.text_utility.red("✗")
+        elif self.questioned:
+            if self.eliminated or self.checked:
+                raise ValueError("Note has multiple scratchpad states!")
+            scratchpad_str = self.text_utility.yellow("?")
+        elif self.checked:
+            if self.eliminated or self.questioned:
+                raise ValueError("Note has multiple scratchpad states!")
+            scratchpad_str = self.text_utility.green("✓")
+
+        return str(self.id) + " | " + scratchpad_str + " | " + name_str + " (" + val_str + ") - " + count_str + " remaining"
+    
+    def eliminate(self) -> None:
+        if self.eliminated:
+            self.eliminated = False
+        else:
+            self.questioned = False
+            self.checked = False
+            self.eliminated = True
+    
+    def question(self) -> None:
+        if self.questioned:
+            self.questioned = False
+        else:
+            self.eliminated = False
+            self.checked = False
+            self.questioned = True
+    
+    def check(self) -> None:
+        if self.checked:
+            self.checked = False
+        else:
+            self.eliminated = False
+            self.questioned = False
+            self.checked = True
 
 class Lyre:
     class NoSuchNoteException(Exception):
@@ -164,6 +224,7 @@ class Lyre:
         l.no_such_note_count = self.no_such_note_count
         l.notes_played_count = self.notes_played_count
 
+        Note.GLOBAL_ID = 0
         for note in self.notes:
             n = Note()
             n.name = note.name
@@ -177,11 +238,19 @@ class Lyre:
         
         return l
     
-    def get_note(
+    def get_note_by_name(
         self,
         name: str,
     ) -> Note:
         note = next((note for note in self.notes if note.name == name), None)
+        
+        return note
+    
+    def get_note_by_id(
+        self,
+        id: int,
+    ) -> Note:
+        note = next((note for note in self.notes if note.id == id), None)
         
         return note
     
@@ -212,7 +281,7 @@ class Lyre:
                 self.no_such_note_count += 1
                 raise self.NoSuchNoteException()
 
-        note = self.get_note(name)
+        note = self.get_note_by_name(name)
         _check_for_broken_string(note)
         note.count -= 1
 
