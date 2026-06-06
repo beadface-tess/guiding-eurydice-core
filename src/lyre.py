@@ -221,6 +221,7 @@ class Lyre:
 
         for note in self.notes:
             n = Note()
+            n.id = note.id
             n.name = note.name
             n.val = note.val
             n.count = note.count
@@ -253,7 +254,7 @@ class Lyre:
         name: str,
     ) -> Note:   
         def _check_for_broken_string(note: t.Optional[Note]=None):
-            if self.debug:
+            if self.debug and note:
                 print(
                     "DEBUG depleted:",
                     note.name,
