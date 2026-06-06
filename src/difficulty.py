@@ -160,11 +160,6 @@ class Difficulty():
 
             if ("repeat_sum_tries" in data.keys()) and (isinstance(data["repeat_sum_tries"], int)):
                 repeat_sum_tries = data["repeat_sum_tries"]
-                print(f"found repeat sum tries {repeat_sum_tries}")
-
-            print(f"repeat sum tries {repeat_sum_tries}")
-            print(data)
-            _ = input("<enter>")
 
             return Difficulty.LyreDifficulty(
                 remaining_notes_difficulty=remaining_notes_difficulty,
