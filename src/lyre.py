@@ -40,15 +40,15 @@ class Note:
         if self.eliminated:
             if self.questioned or self.checked:
                 raise ValueError("Note has multiple scratchpad states!")
-            scratchpad_str = self.text_utility.red("✗")
+            scratchpad_str = self.text_utility.red(self.text_utility.X)
         elif self.questioned:
             if self.eliminated or self.checked:
                 raise ValueError("Note has multiple scratchpad states!")
-            scratchpad_str = self.text_utility.yellow("?")
+            scratchpad_str = self.text_utility.yellow(self.text_utility.Q)
         elif self.checked:
             if self.eliminated or self.questioned:
                 raise ValueError("Note has multiple scratchpad states!")
-            scratchpad_str = self.text_utility.green("✓")
+            scratchpad_str = self.text_utility.green(self.text_utility.V)
 
         return "{:2d}".format(self.id) + " | " + scratchpad_str + " | " + name_str + " (" + val_str + ") - " + count_str + " remaining"
     
