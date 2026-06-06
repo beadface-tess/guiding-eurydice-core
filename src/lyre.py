@@ -10,7 +10,6 @@ from src.utils import TextUtility
 class Note:    
     def __init__(
       self,
-      id: t.Optional[int]=None,
       val: t.Optional[int]=-1,
       name: t.Optional[str]="Z",
       count: t.Optional[int]=1,
@@ -94,14 +93,12 @@ class Lyre:
       difficulty: t.Optional[Difficulty]=None,
       rng: t.Optional[random.Random]=None,
     ):        
-        self.notes = notes or []
-
-        for i, note in enumerate(self.notes):
-            note.id = i + 1       
-
         self.debug = debug
         self.difficulty = difficulty or Difficulty(2, "")
         self.rng = rng or random.Random()
+
+        self.notes = notes or []
+        self.scramble_notes()  
 
         self.no_such_note_count = 0
         self.notes_played_count = 0
@@ -213,8 +210,7 @@ class Lyre:
         return res  
     
     def copy(self) -> Lyre:
-        l = Lyre()
-        l.debug = self.debug
+        l = Lyre(debug=self.debug, rng=self.rng)
         l.difficulty = self.difficulty
         l.no_such_note_count = self.no_such_note_count
         l.notes_played_count = self.notes_played_count
@@ -231,6 +227,7 @@ class Lyre:
 
             l.notes.append(n)
         
+        l.scramble_notes()
         return l
     
     def get_note_by_name(
@@ -248,6 +245,21 @@ class Lyre:
         note = next((note for note in self.notes if note.id == id), None)
         
         return note
+    
+    def scramble_notes(self) -> None:
+        names = [n.name for n in self.notes]
+        values = [n.val for n in self.notes]
+        counts = [n.count for n in self.notes]
+
+        self.rng.shuffle(names)
+        self.rng.shuffle(values)
+        self.rng.shuffle(counts)
+
+        for i, note in enumerate(self.notes):
+            note.id = i + 1
+            note.name = names[i]
+            note.val = values[i]
+            note.count = counts[i]
     
     def play_note(
         self,
