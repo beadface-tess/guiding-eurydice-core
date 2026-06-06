@@ -45,7 +45,6 @@ class Level:
       debug: t.Optional[bool]=False,
       given_seed: t.Optional[int]=None,
     ):
-        print("received id", id)
         self.id = id or self._get_next_id()
         self.eurydice_lives = -1
 
