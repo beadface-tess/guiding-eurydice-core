@@ -95,12 +95,14 @@ class Difficulty():
             note_values_difficulty: t.Optional[NotesDifficulty] = None,
             broken_strings_difficulty: t.Optional[BrokenStringDifficulty] = None,
             selfishness_enabled: t.Optional[bool] = None,
+            repeat_sum_tries: t.Optional[int] = None,
         ):
             self.remaining_notes_difficulty = remaining_notes_difficulty or self.NotesDifficulty()
             self.note_names_difficulty = note_names_difficulty or self.NotesDifficulty()
             self.note_values_difficulty = note_values_difficulty or self.NotesDifficulty()
             self.broken_strings_difficulty = broken_strings_difficulty or self.BrokenStringDifficulty()
             self.selfishness_enabled = selfishness_enabled or False
+            self.repeat_sum_tries = repeat_sum_tries
 
         def __str__(self) -> str:
             res = ""
@@ -126,6 +128,7 @@ class Difficulty():
             res += str(self.broken_strings_difficulty) + "\n"
 
             res += "selfishness_enabled: " + str(self.selfishness_enabled)
+            res += "repeat_sum_tries: " + str(self.repeat_sum_tries)
 
             return res
 
@@ -138,6 +141,7 @@ class Difficulty():
             note_values_difficulty = None
             broken_strings_difficulty = None
             selfishness_enabled = False
+            repeat_sum_tries = -1
 
             if ("remaining_notes_hidden_config" in data.keys()) and (isinstance(data["remaining_notes_hidden_config"], dict)):
                 remaining_notes_difficulty = Difficulty.LyreDifficulty.NotesDifficulty.from_json(data["remaining_notes_hidden_config"])
@@ -154,12 +158,21 @@ class Difficulty():
             if ("selfishness_enabled" in data.keys()) and (isinstance(data["selfishness_enabled"], bool)):
                 selfishness_enabled = data["selfishness_enabled"]
 
+            if ("repeat_sum_tries" in data.keys()) and (isinstance(data["repeat_sum_tries"], int)):
+                repeat_sum_tries = data["repeat_sum_tries"]
+                print(f"found repeat sum tries {repeat_sum_tries}")
+
+            print(f"repeat sum tries {repeat_sum_tries}")
+            print(data)
+            _ = input("<enter>")
+
             return Difficulty.LyreDifficulty(
                 remaining_notes_difficulty=remaining_notes_difficulty,
                 note_names_difficulty=note_names_difficulty,
                 note_values_difficulty=note_values_difficulty,
                 broken_strings_difficulty=broken_strings_difficulty,
                 selfishness_enabled=selfishness_enabled,
+                repeat_sum_tries=repeat_sum_tries,
             )
 
     class SumDifficulty():

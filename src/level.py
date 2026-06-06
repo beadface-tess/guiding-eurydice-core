@@ -74,6 +74,8 @@ class Level:
         self.backup_lyre = None
         self.lyre.difficulty = self.difficulty
         self.backup_rng_state = None
+
+        self.sum_tries: t.Dict[int, int] = {}
       
     def __str__(self) -> str:
         res = str(self.lyre)
@@ -119,6 +121,7 @@ class Level:
             self.seed = random.randint(0, 1000)
         
         self.rng = random.Random(self.seed)
+        self.sum_tries = {}
 
     def set_eurydice_goal(
         self,
@@ -209,6 +212,27 @@ class Level:
 
         if self.debug:
             print(f"Found {str(len(solutions))} solutions for Eurydice: {[[str(note) for note in soln] for soln in solutions]}")
+            print(f"Checking sum tries")
+        
+        print(f"TOTAL: {total}")
+        if total in self.sum_tries.keys():
+            print("IN keys")
+            count = self.sum_tries[total]
+            tries = self.difficulty.lyre_difficulty.repeat_sum_tries
+            print(f"tries: {tries}, count: {count}")
+
+            if (tries != -1 ) and (count >= tries):
+                print("fatal")
+                self.state = self.LevelState.EURYDICE_FATAL
+                return False
+            
+            print("incrementing count")
+            self.sum_tries[total] = count + 1
+        else:
+            print("incrementing count")
+            self.sum_tries[total] = 0
+        _ = input("<enter>")
+        
         if len(solutions) == 0:
             if self.debug:
                 print("No solutions possible for Eurydice. Thwarting...")
