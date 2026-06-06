@@ -120,7 +120,10 @@ class Level:
         
         self.rng = random.Random(self.seed)
 
-    def set_eurydice_goal(self):
+    def set_eurydice_goal(
+        self,
+        selfishness_enabled: t.Optional[bool] = False,
+    ) -> bool:
         if self.state != self.LevelState.ORPHEUS_SUCCESS:
             raise Exception
 
@@ -137,7 +140,20 @@ class Level:
             print("LYRE:", [(n.name, n.val, n.count) for n in self.lyre.notes])
             print("ELIGIBLE LEN:", len(eligible_notes))
 
-        eurydice_goal_sum_len = self.rng.randint(int(len(eligible_notes) / 2), len(eligible_notes))
+        if selfishness_enabled and (start >= end):
+            start = max(2, len(eligible_notes) // 2)
+            end = len(eligible_notes) - 1
+
+            if start >= end:
+                return False
+        else:
+            start = len(eligible_notes) // 2
+            end = len(eligible_notes)
+
+        if self.debug:
+            print(f"start: {start}, end: {end}")
+
+        eurydice_goal_sum_len = self.rng.randint(start, end)
 
         if self.debug:
             print("GOAL LEN: ", str(eurydice_goal_sum_len))
@@ -147,6 +163,11 @@ class Level:
         self.eurydice_lives = len(possible_totals)
         self.eurydice_goal.val = possible_totals[self.rng.randint(0, len(possible_totals) - 1)]
         self.eurydice_goal.sum_len = eurydice_goal_sum_len
+        
+        if self.debug:
+            _ = input("<enter>")
+
+        return True
 
     def try_orpheus(
         self,

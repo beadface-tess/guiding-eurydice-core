@@ -94,11 +94,13 @@ class Difficulty():
             note_names_difficulty: t.Optional[NotesDifficulty] = None,
             note_values_difficulty: t.Optional[NotesDifficulty] = None,
             broken_strings_difficulty: t.Optional[BrokenStringDifficulty] = None,
+            selfishness_enabled: t.Optional[bool] = None,
         ):
             self.remaining_notes_difficulty = remaining_notes_difficulty or self.NotesDifficulty()
             self.note_names_difficulty = note_names_difficulty or self.NotesDifficulty()
             self.note_values_difficulty = note_values_difficulty or self.NotesDifficulty()
             self.broken_strings_difficulty = broken_strings_difficulty or self.BrokenStringDifficulty()
+            self.selfishness_enabled = selfishness_enabled or False
 
         def __str__(self) -> str:
             res = ""
@@ -123,6 +125,8 @@ class Difficulty():
             res += ("-" * len(broken_strs_diff)) + "\n"
             res += str(self.broken_strings_difficulty) + "\n"
 
+            res += "selfishness_enabled: " + str(self.selfishness_enabled)
+
             return res
 
         @staticmethod
@@ -133,6 +137,7 @@ class Difficulty():
             note_names_difficulty = None
             note_values_difficulty = None
             broken_strings_difficulty = None
+            selfishness_enabled = False
 
             if ("remaining_notes_hidden_config" in data.keys()) and (isinstance(data["remaining_notes_hidden_config"], dict)):
                 remaining_notes_difficulty = Difficulty.LyreDifficulty.NotesDifficulty.from_json(data["remaining_notes_hidden_config"])
@@ -146,11 +151,15 @@ class Difficulty():
             if ("broken_string_config" in data.keys()) and (isinstance(data["broken_string_config"], dict)):
                 broken_strings_difficulty = Difficulty.LyreDifficulty.BrokenStringDifficulty.from_json(data["broken_string_config"])
             
+            if ("selfishness_enabled" in data.keys()) and (isinstance(data["selfishness_enabled"], bool)):
+                selfishness_enabled = data["selfishness_enabled"]
+
             return Difficulty.LyreDifficulty(
                 remaining_notes_difficulty=remaining_notes_difficulty,
                 note_names_difficulty=note_names_difficulty,
                 note_values_difficulty=note_values_difficulty,
                 broken_strings_difficulty=broken_strings_difficulty,
+                selfishness_enabled=selfishness_enabled,
             )
 
     class SumDifficulty():
