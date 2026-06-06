@@ -75,6 +75,11 @@ class Note:
             self.eliminated = False
             self.questioned = False
             self.checked = True
+    
+    def clear(self) -> None:
+        self.checked = False
+        self.questioned = False
+        self.eliminated = False
 
 class Lyre:
     class NoSuchNoteException(Exception):
@@ -209,6 +214,10 @@ class Lyre:
             res += str(note) + "\n"
         return res  
     
+    def clear_scratchpad(self) -> None:
+        for note in self.notes:
+            note.clear()
+    
     def copy(self) -> Lyre:
         l = Lyre(debug=self.debug, rng=self.rng)
         l.difficulty = self.difficulty
@@ -248,18 +257,12 @@ class Lyre:
     
     def scramble_notes(self) -> None:
         names = [n.name for n in self.notes]
-        values = [n.val for n in self.notes]
-        counts = [n.count for n in self.notes]
 
         self.rng.shuffle(names)
-        self.rng.shuffle(values)
-        self.rng.shuffle(counts)
 
         for i, note in enumerate(self.notes):
             note.id = i + 1
             note.name = names[i]
-            note.val = values[i]
-            note.count = counts[i]
     
     def play_note(
         self,
