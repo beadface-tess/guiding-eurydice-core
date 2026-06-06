@@ -225,12 +225,9 @@ class Level:
                 self.state = self.LevelState.EURYDICE_FATAL
                 return False
             
-            print("incrementing count")
             self.sum_tries[total] = count + 1
         else:
-            print("incrementing count")
             self.sum_tries[total] = 0
-        _ = input("<enter>")
         
         if len(solutions) == 0:
             if self.debug:
